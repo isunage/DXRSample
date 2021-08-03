@@ -1,0 +1,5 @@
+set(TEST_BASE_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/Win32Application.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Win32AppDelegate.cpp
+    PARENT_SCOPE
+)
