@@ -1,0 +1,4 @@
+#ifndef RTLIB_DX12_FRAMEBUFFER_H
+#define RTLIB_DX12_FRAMEBUFFER_H
+
+#endif

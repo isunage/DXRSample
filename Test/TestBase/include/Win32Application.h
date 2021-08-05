@@ -21,6 +21,7 @@ namespace test {
         auto    GetWidth() const->UINT;
         auto    GetHeight()const->UINT;
         auto    GetTitle() const->LPCSTR;
+        auto    GetWindow()const->HWND;
         static void Delegate(std::shared_ptr<Win32Application> app, std::shared_ptr<Win32AppDelegate> delegate);
         static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     protected:

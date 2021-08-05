@@ -1,0 +1,4 @@
+set(TEST1_SOURCES 
+    ${CMAKE_CURRENT_SOURCE_DIR}/Test1AppDelegate.cpp    
+    ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp 
+    PARENT_SCOPE)

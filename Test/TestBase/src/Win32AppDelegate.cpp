@@ -20,6 +20,8 @@ auto test::Win32AppDelegate::GetTitle() const -> LPCSTR
 	return m_Title.c_str();
 }
 
+inline auto test::Win32AppDelegate::GetWindowBounds() const -> RECT { return m_WindowBounds; }
+
 void test::Win32AppDelegate::SetWindowBounds(int left, int top, int right, int bottom)
 {
 	m_WindowBounds.left   = static_cast<LONG>(left);

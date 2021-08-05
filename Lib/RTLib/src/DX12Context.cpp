@@ -1,76 +1,172 @@
 #include "..\include\RTLib\DX12Context.h"
+#include <fmt/format.h>
 #include <cassert>
 
-void rtlib::DX12Context::Prepare(D3D12_RESOURCE_STATES stateBefore)
+void rtlib::DX12Context::InitFactory()
 {
-	ThrowIfFailed(m_CommandAllocators[m_BackBufferIndex]->Reset());
-	ThrowIfFailed(m_CommandList->Reset(m_CommandAllocators[m_BackBufferIndex].Get(), nullptr));
-	if (stateBefore != D3D12_RESOURCE_STATE_RENDER_TARGET) {
-		m_CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(GetRenderTarget(), stateBefore, D3D12_RESOURCE_STATE_RENDER_TARGET));
+	bool dxgiDebug = false;
+#ifdef _DEBUG
+	{
+		ComPtr<ID3D12Debug> debug;
+		RTLIB_IF_SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debug)))
+		{
+			debug->EnableDebugLayer();
+		}
+		else {
+			fmt::print("WARNING: Direct3D Debug Device is not available\n");
+		}
+		ComPtr<IDXGIInfoQueue> infoQueue;
+		RTLIB_IF_SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&infoQueue))) {
+			ThrowIfFailed(CreateDXGIFactory2(DXGI_CREATE_FACTORY_DEBUG, IID_PPV_ARGS(&m_Factory)));
+			infoQueue->SetBreakOnSeverity(DXGI_DEBUG_ALL, DXGI_INFO_QUEUE_MESSAGE_SEVERITY_ERROR     , true);
+			infoQueue->SetBreakOnSeverity(DXGI_DEBUG_ALL, DXGI_INFO_QUEUE_MESSAGE_SEVERITY_CORRUPTION, true);
+			dxgiDebug = true;
+		}
+	}
+#endif
+	if (!dxgiDebug)
+	{
+		ThrowIfFailed(CreateDXGIFactory1(IID_PPV_ARGS(&m_Factory)));
+	}
+#ifdef _DEBUG
+	{
+		ComPtr<IDXGIDebug1> debug;
+		if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&debug))))
+		{
+			debug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_FLAGS(DXGI_DEBUG_RLO_IGNORE_INTERNAL | DXGI_DEBUG_RLO_SUMMARY));
+		}
+	}
+#endif
+	if (m_Options & (TearingFlags::eAllow | TearingFlags::eRequired)) {
+		BOOL allowTearing = false;
+		ComPtr<IDXGIFactory5> factory5;
+		HRESULT hr = m_Factory.As(&factory5);
+		RTLIB_IF_SUCCEEDED(hr)
+		{
+			hr = factory5->CheckFeatureSupport(DXGI_FEATURE_PRESENT_ALLOW_TEARING, &allowTearing, sizeof(allowTearing));
+		}
+		if (FAILED(hr) || !allowTearing) {
+			fmt::print("WARNING: Variable refresh rate displays are not supported.\n");
+			if (m_Options & TearingFlags::eRequired) {
+				ThrowIfFailed(S_FALSE, "Error: Sample must be run on an OS with tearing support.\n");
+			}
+			m_Options &= ~TearingFlags::eAllow;
+		}
 	}
 }
 
-void rtlib::DX12Context::Present(D3D12_RESOURCE_STATES stateBefore)
+void rtlib::DX12Context::InitAdapter()
 {
-	if (stateBefore != D3D12_RESOURCE_STATE_PRESENT) {
-		m_CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(GetRenderTarget(), stateBefore, D3D12_RESOURCE_STATE_PRESENT));
+	ComPtr<IDXGIAdapter1> adapter1;
+	ComPtr<IDXGIFactory6> factory6;
+	
+	HRESULT hr = m_Factory.As(&factory6);
+
+	RTLIB_IF_FAILED(hr) {
+		throw std::exception("DXGI 1.6 Not Supported!");
 	}
-	ExecuteCommandList();
-	HRESULT hr;
-	if (m_Options & kAllowTearing)
+
+	for (auto adapterID = 0; DXGI_ERROR_NOT_FOUND != factory6->EnumAdapterByGpuPreference(adapterID, DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE, IID_PPV_ARGS(&adapter1)); ++adapterID)
 	{
-		hr = m_SwapChain->Present(0, DXGI_PRESENT_ALLOW_TEARING);
+		if (m_AdapterID != UINT_MAX && adapterID != m_AdapterID) {
+			continue;
+		}
+
+		DXGI_ADAPTER_DESC1 desc;
+		ThrowIfFailed(adapter1->GetDesc1(&desc));
+
+		if (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE) {
+			continue;
+		}
+
+		RTLIB_IF_SUCCEEDED(D3D12CreateDevice(adapter1.Get(), D3D_FEATURE_LEVEL_11_0, __uuidof(ID3D12Device), nullptr)) {
+			m_AdapterID = adapterID;
+			break;
+		}
+	}
+	if (!adapter1)
+	{
+		if (m_AdapterID != UINT_MAX)
+		{
+			throw std::exception("Unavailable adapter requested!");
+		}
+		else {
+			throw std::exception("Unavailable adapter!");
+		}
+	}
+	adapter1.As(&m_Adapter);
+}
+
+void rtlib::DX12Context::InitDevice()
+{
+	ThrowIfFailed(D3D12CreateDevice(m_Adapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&m_Device)));
+#ifndef NDEBUG
+	{
+		ComPtr<ID3D12InfoQueue> infoQueue;
+		RTLIB_IF_SUCCEEDED(m_Device.As(&infoQueue))
+		{
+#ifdef _DEBUG
+			{
+				D3D12_MESSAGE_ID hides[] = { D3D12_MESSAGE_ID_MAP_INVALID_NULLRANGE,D3D12_MESSAGE_ID_UNMAP_INVALID_NULLRANGE };
+
+				D3D12_INFO_QUEUE_FILTER filter = {};
+
+				filter.DenyList.NumIDs  = std::size(hides);
+				filter.DenyList.pIDList = std::data(hides);
+
+				infoQueue->AddStorageFilterEntries(&filter);
+			}
+#endif
+
+		}
+	}
+#endif
+
+	constexpr D3D_FEATURE_LEVEL s_FeatureLevels []= {
+		D3D_FEATURE_LEVEL_12_1,
+		D3D_FEATURE_LEVEL_12_0,
+		D3D_FEATURE_LEVEL_11_1,
+		D3D_FEATURE_LEVEL_11_0
+	};
+
+	D3D12_FEATURE_DATA_FEATURE_LEVELS featLevels = {
+		std::size(s_FeatureLevels),std::data(s_FeatureLevels),D3D_FEATURE_LEVEL_11_0
+	};
+
+	HRESULT hr = m_Device->CheckFeatureSupport(D3D12_FEATURE_FEATURE_LEVELS, &featLevels, sizeof(featLevels));
+
+	RTLIB_IF_SUCCEEDED(hr) {
+		m_FeatLevel = featLevels.MaxSupportedFeatureLevel;
 	}
 	else {
-		hr = m_SwapChain->Present(1, 0);
-	}
-	if (hr == DXGI_ERROR_DEVICE_REMOVED || hr == DXGI_ERROR_DEVICE_RESET)
-	{
-		HandleDeviceLost();
-	}
-	else {
-		ThrowIfFailed(hr);
-		MoveToNextFrame();
+		m_FeatLevel = D3D_FEATURE_LEVEL_11_0;
 	}
 }
 
-void rtlib::DX12Context::MoveToNextFrame()
+void rtlib::DX12Context::InitGCmdQueue()
 {
+	D3D12_COMMAND_QUEUE_DESC queueDesc = {};
+	queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
+	queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
+
+	ThrowIfFailed(m_Device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&m_GCommandQueue)));
 }
 
-void rtlib::DX12Context::InitializeAdapter(IDXGIAdapter1** ppAdapter)
+void rtlib::DX12Context::InitCCmdQueue()
 {
+	D3D12_COMMAND_QUEUE_DESC queueDesc = {};
+	queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
+	queueDesc.Type = D3D12_COMMAND_LIST_TYPE_COMPUTE;
+
+	ThrowIfFailed(m_Device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&m_CCommandQueue)));
 }
 
-rtlib::DX12Context::DX12Context(DXGI_FORMAT backBufferFormat, DXGI_FORMAT depthBufferFormat, UINT backBufferCount, D3D_FEATURE_LEVEL minFeatureLevel, UINT flags, UINT adapterIdOverride):
-	m_BackBufferIndex(0),
-	m_FenceValues{},
-	m_RtvDescriptorSize(0),
-	m_Viewport{}, m_Scissor{},
-	m_BackBufferFormat{backBufferFormat},
-	m_DepthBufferFormat{depthBufferFormat},
-	m_D3dMinFeatureLevel{D3D_FEATURE_LEVEL_11_0},
-	m_OutputSize{ 0,0,1,1 },
-	m_Options{flags},
-	m_IsWindowVisible(true),
-	m_AdapterIdOverride(adapterIdOverride),
-	m_AdapterID(UINT_MAX)
+void rtlib::DX12Context::InitTCmdQueue()
 {
-	assert(backBufferCount <= kMaxBackBufferCount);
-	assert(minFeatureLevel <= D3D_FEATURE_LEVEL_11_0);
+	D3D12_COMMAND_QUEUE_DESC queueDesc = {};
+	queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
+	queueDesc.Type = D3D12_COMMAND_LIST_TYPE_COPY;
 
-	if (m_Options & kRequireTearingSupport) {
-		m_Options |= kAllowTearing;
-	}
+	ThrowIfFailed(m_Device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&m_TCommandQueue)));
 }
 
-rtlib::DX12Context::~DX12Context()
-{
-	WaitForGPU();
-}
-
-void rtlib::DX12Context::InitializeDXGIAdapter()
-{
-	bool debugDXGI = false;
-
-}

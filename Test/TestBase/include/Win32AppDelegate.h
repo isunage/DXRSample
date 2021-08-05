@@ -28,7 +28,7 @@ namespace test {
         auto GetWidth ()const->UINT;
         auto GetHeight()const->UINT;
         auto GetTitle ()const->LPCSTR;
-        auto GetWindowBounds()const->RECT { return m_WindowBounds;  }
+        auto GetWindowBounds()const->RECT;
         void SetWindowBounds(int left, int top, int right, int bottom);
 
     protected:

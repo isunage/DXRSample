@@ -108,6 +108,11 @@ auto test::Win32Application::GetTitle() const -> LPCSTR
 	return m_Title.c_str();
 }
 
+auto test::Win32Application::GetWindow() const -> HWND
+{
+	return m_Hwnd;
+}
+
 void test::Win32Application::Delegate(std::shared_ptr<Win32Application> app, std::shared_ptr<Win32AppDelegate> delegate)
 {
 	if (app && delegate) {

@@ -6,6 +6,8 @@ set(CMAKE_CXX_STANDARD 17)
 
 find_package(Threads REQUIRED)
 
+add_definitions(-DNOMINMAX)
+
 add_subdirectory(Lib)
 
 add_subdirectory(Test)
