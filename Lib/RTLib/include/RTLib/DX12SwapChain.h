@@ -2,6 +2,7 @@
 #define RTLIB_DX12_SWAPCHAIN_H
 #include "DX12.h"
 #include "DX12Context.h"
+#include <RTLibConfig.h>
 namespace rtlib{
     class DX12SwapChain {
     public:
@@ -49,7 +50,7 @@ namespace rtlib{
             m_SwapChain.Reset();
         }
         
-        void BeginFrame(D3D12_RESOURCE_STATES stateBefore = D3D12_RESOURCE_STATE_PRESENT);
+        void BeginFrame(D3D12_RESOURCE_STATES stateBefore = D3D12_RESOURCE_STATE_PRESENT      , D3D12_RESOURCE_STATES stateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET);
         bool   EndFrame(D3D12_RESOURCE_STATES stateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET);
         void ExecuteCommandList();
         void WaitForGPU();

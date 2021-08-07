@@ -1,2 +1,2 @@
-add_subdirectory(RTLib)
 add_subdirectory(ThirdParty)
+add_subdirectory(RTLib)

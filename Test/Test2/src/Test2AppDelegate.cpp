@@ -1,28 +1,28 @@
-#include "../include/Test1AppDelegate.h"
+#include "../include/Test2AppDelegate.h"
 #include <RTLib/DX12.h>
 #include <dxcapi.h>
-#include <Test1Config.h>
+#include <Test2Config.h>
 #include <filesystem>
-test::Test1AppDelegate::Test1AppDelegate() :Win32AppDelegate()
+test::Test2AppDelegate::Test2AppDelegate() :Win32AppDelegate()
 {
 }
 
-test::Test1AppDelegate::Test1AppDelegate(int width, int height, std::string title) : Win32AppDelegate(width, height, title)
+test::Test2AppDelegate::Test2AppDelegate(int width, int height, std::string title) : Win32AppDelegate(width, height, title)
 {
 	m_Context = std::make_shared<rtlib::DX12Context>(D3D_FEATURE_LEVEL_12_1);
 }
 
-auto test::Test1AppDelegate::New() -> std::shared_ptr<Win32AppDelegate>
+auto test::Test2AppDelegate::New() -> std::shared_ptr<Win32AppDelegate>
 {
-	return std::make_shared<Test1AppDelegate>();
+	return std::make_shared<Test2AppDelegate>();
 }
 
-auto test::Test1AppDelegate::New(int width, int height, std::string title) -> std::shared_ptr<Win32AppDelegate>
+auto test::Test2AppDelegate::New(int width, int height, std::string title) -> std::shared_ptr<Win32AppDelegate>
 {
-	return std::make_shared<Test1AppDelegate>(width, height, title);
+	return std::make_shared<Test2AppDelegate>(width, height, title);
 }
 
-void test::Test1AppDelegate::OnInit()
+void test::Test2AppDelegate::OnInit()
 {
 	m_SwapChain = std::make_shared<rtlib::DX12SwapChain>(m_Context.get(), m_Application.lock()->GetWindow(), m_Application.lock()->GetWidth(), m_Application.lock()->GetHeight(), 3);
 	m_Context->OnInit();
@@ -30,7 +30,7 @@ void test::Test1AppDelegate::OnInit()
 	InitAssets();
 }
 
-void test::Test1AppDelegate::OnRender()
+void test::Test2AppDelegate::OnRender()
 {
 #if 0
 	m_SwapChain->BeginFrame();
@@ -66,6 +66,7 @@ void test::Test1AppDelegate::OnRender()
 	rayTraceDesc.HitGroupTable.StrideInBytes            = m_ShaderTableEntrySize;
 
 	commandList5->SetComputeRootSignature(m_GlobalRootSignature.Get());
+	commandList5->SetComputeRootDescriptorTable(0, m_SrvUavHeap->GetGPUDescriptorHandleForHeapStart());
 	commandList5->SetPipelineState1(m_StateObject.Get());
 	commandList5->DispatchRays(&rayTraceDesc);
 	
@@ -84,7 +85,7 @@ void test::Test1AppDelegate::OnRender()
 #endif
 }
 
-void test::Test1AppDelegate::OnDestroy()
+void test::Test2AppDelegate::OnDestroy()
 {
 	m_SwapChain->WaitForGPU();
 	FreeAssets();
@@ -93,7 +94,7 @@ void test::Test1AppDelegate::OnDestroy()
 	m_SwapChain.reset();
 }
 
-void test::Test1AppDelegate::InitAssets()
+void test::Test2AppDelegate::InitAssets()
 {
 	InitCommands();
 	InitFences();
@@ -103,7 +104,7 @@ void test::Test1AppDelegate::InitAssets()
 	InitShaderTable();
 }
 
-void test::Test1AppDelegate::FreeAssets()
+void test::Test2AppDelegate::FreeAssets()
 {
 	m_Mesh.reset();
 	m_VB.Reset();
@@ -115,7 +116,7 @@ void test::Test1AppDelegate::FreeAssets()
 	m_Fence.Reset();
 }
 
-void test::Test1AppDelegate::InitCommands()
+void test::Test2AppDelegate::InitCommands()
 {
 	rtlib::ThrowIfFailed(m_Context->GetDevice()->CreateCommandAllocator(
 		D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_CommandAllocator)
@@ -131,12 +132,12 @@ void test::Test1AppDelegate::InitCommands()
 
 }
 
-void test::Test1AppDelegate::InitFences()
+void test::Test2AppDelegate::InitFences()
 {
 	rtlib::ThrowIfFailed(
 		m_Context->GetDevice()->CreateFence(m_FenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_Fence))
 	);
-	RTLIB_DX12_NAME(test::Test1AppDelegate::m_Fence);
+	RTLIB_DX12_NAME(test::Test2AppDelegate::m_Fence);
 
 	m_FenceValue++;
 
@@ -148,7 +149,7 @@ void test::Test1AppDelegate::InitFences()
 	this->WaitForGPU();
 }
 
-void test::Test1AppDelegate::InitMesh()
+void test::Test2AppDelegate::InitMesh()
 {
 	m_Mesh = rtlib::DX12Mesh::New("Triangle");
 
@@ -238,10 +239,6 @@ void test::Test1AppDelegate::InitMesh()
 		rtlib::DX12IndexBufferView::New(
 			m_IB.Get(), DXGI_FORMAT_R32_UINT, 0, 6, sizeof(indices)
 		));
-
-
-
-
 	//Acceleration Structure
 	if (m_Context->SupportDXR()) {
 
@@ -279,7 +276,7 @@ void test::Test1AppDelegate::InitMesh()
 				nullptr,
 				IID_PPV_ARGS(&m_Blas)
 			));
-			RTLIB_DX12_NAME(test::Test1AppDelegate::m_Blas);
+			RTLIB_DX12_NAME(test::Test2AppDelegate::m_Blas);
 			rtlib::ThrowIfFailed(device5->CreateCommittedResource(
 				&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
 				D3D12_HEAP_FLAG_NONE,
@@ -357,7 +354,7 @@ void test::Test1AppDelegate::InitMesh()
 				nullptr,
 				IID_PPV_ARGS(&m_Tlas)
 			));
-			RTLIB_DX12_NAME(test::Test1AppDelegate::m_Tlas);
+			RTLIB_DX12_NAME(test::Test2AppDelegate::m_Tlas);
 			rtlib::ThrowIfFailed(device5->CreateCommittedResource(
 				&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
 				D3D12_HEAP_FLAG_NONE,
@@ -429,11 +426,9 @@ void test::Test1AppDelegate::InitMesh()
 		srvDesc.RaytracingAccelerationStructure.Location = m_Tlas->GetGPUVirtualAddress();
 		m_Context->GetDevice()->CreateShaderResourceView(nullptr, &srvDesc, srvUavHandle);
 	}
-
-	
 }
 
-void test::Test1AppDelegate::InitPipeline()
+void test::Test2AppDelegate::InitPipeline()
 {
 	//shader
 	rtlib::ComPtr<IDxcBlob> vs;
@@ -448,7 +443,7 @@ void test::Test1AppDelegate::InitPipeline()
 		rtlib::ThrowIfFailed(DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&compiler)));
 
 		UINT32 codePage = 0;
-		auto graphicsShaderPath = std::filesystem::path(TEST1_SHADER_PATH)/"Graphics.hlsl";
+		auto graphicsShaderPath = std::filesystem::path(TEST2_SHADER_PATH)/"Graphics.hlsl";
 		rtlib::ThrowIfFailed(
 			library->CreateBlobFromFile(
 				graphicsShaderPath.wstring().c_str(),&codePage,&shaderBlob
@@ -549,13 +544,12 @@ void test::Test1AppDelegate::InitPipeline()
 	}
 }
 
-void test::Test1AppDelegate::InitStateObject()
+void test::Test2AppDelegate::InitStateObject()
 {
-
 	CD3DX12_STATE_OBJECT_DESC stateObjectDesc = {};
 	stateObjectDesc.SetStateObjectType(D3D12_STATE_OBJECT_TYPE_RAYTRACING_PIPELINE);
 
-	rtlib::ComPtr<IDxcBlob>        rs;
+	rtlib::ComPtr<IDxcBlob>            rs;
 	auto dxilLibrary = stateObjectDesc.CreateSubobject<CD3DX12_DXIL_LIBRARY_SUBOBJECT>();
 	{
 		rtlib::ComPtr<IDxcBlobEncoding> shaderBlob;
@@ -567,12 +561,13 @@ void test::Test1AppDelegate::InitStateObject()
 		rtlib::ThrowIfFailed(DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&compiler)));
 
 		UINT32 codePage = 0;
-		auto rayTraceShaderPath = std::filesystem::path(TEST1_SHADER_PATH) / "RayTrace.hlsl";
+		auto rayTraceShaderPath = std::filesystem::path(TEST2_SHADER_PATH) / "RayTrace2.hlsl";
 		rtlib::ThrowIfFailed(
 			library->CreateBlobFromFile(rayTraceShaderPath.wstring().c_str(), &codePage, &shaderBlob)
 		);
 		{
-			rtlib::ComPtr<IDxcOperationResult> rsResult;
+			rtlib::ComPtr<IDxcOperationResult>  rsResult;
+
 			auto hr = compiler->Compile(
 				shaderBlob.Get(),
 				rayTraceShaderPath.filename().wstring().c_str(),
@@ -601,98 +596,27 @@ void test::Test1AppDelegate::InitStateObject()
 			rtlib::ThrowIfFailed(rsResult->GetResult(&rs));
 		}
 
-		dxilLibrary->SetDXILLibrary(&CD3DX12_SHADER_BYTECODE(rs->GetBufferPointer(),rs->GetBufferSize()));
+		dxilLibrary->SetDXILLibrary(&CD3DX12_SHADER_BYTECODE(rs->GetBufferPointer(), rs->GetBufferSize()));
 		dxilLibrary->DefineExport(L"rayGen");
 		dxilLibrary->DefineExport(L"miss");
 		dxilLibrary->DefineExport(L"chs");
+		dxilLibrary->DefineExport(L"globalRootSignature");
+		dxilLibrary->DefineExport(L"hitGroup");
+		dxilLibrary->DefineExport(L"shaderConfig");
+		dxilLibrary->DefineExport(L"pipelineConfig");
+		dxilLibrary->DefineExport(L"stateObjectConfig");
 	}
 
-	auto hitProgram = stateObjectDesc.CreateSubobject<CD3DX12_HIT_GROUP_SUBOBJECT>();
 	{
-		hitProgram->SetHitGroupType(D3D12_HIT_GROUP_TYPE_TRIANGLES);
-		hitProgram->SetHitGroupExport(L"hitGroup");
-		hitProgram->SetClosestHitShaderImport(L"chs");
+		rtlib::ThrowIfFailed(m_Context->GetDevice()->CreateRootSignature(0, rs->GetBufferPointer(), rs->GetBufferSize(), IID_PPV_ARGS(&m_GlobalRootSignature)));
+		const D3D12_STATE_OBJECT_DESC* pStateObjectDesc = &D3D12_STATE_OBJECT_DESC(stateObjectDesc);
+		rtlib::ComPtr<ID3D12Device5> device5;
+		m_Context->GetDevice()->QueryInterface(IID_PPV_ARGS(&device5));
+		rtlib::ThrowIfFailed(device5->CreateStateObject(pStateObjectDesc, IID_PPV_ARGS(&m_StateObject)));
 	}
-
-	rtlib::ComPtr <ID3D12RootSignature>    rayGenRootSignature;
-	auto rayGenRoot = stateObjectDesc.CreateSubobject< CD3DX12_LOCAL_ROOT_SIGNATURE_SUBOBJECT>();
-	{
-		CD3DX12_DESCRIPTOR_RANGE1 rayGenDescRanges[2] = {};
-		rayGenDescRanges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);
-		rayGenDescRanges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
-		CD3DX12_ROOT_PARAMETER1  rayGenRootParams[1] = {};
-		rayGenRootParams[0].InitAsDescriptorTable(std::size(rayGenDescRanges), std::data(rayGenDescRanges));
-		auto rayGenSignatureDesc = CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC();
-		rayGenSignatureDesc.Init_1_1(1, rayGenRootParams, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_LOCAL_ROOT_SIGNATURE);
-		{
-			rtlib::ComPtr<ID3DBlob> signature;
-			rtlib::ComPtr<ID3DBlob> error;
-			rtlib::ThrowIfFailed(D3D12SerializeVersionedRootSignature(&rayGenSignatureDesc, &signature, &error));
-			rtlib::ThrowIfFailed(m_Context->GetDevice()->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&rayGenRootSignature)));
-		}
-		rayGenRoot->SetRootSignature(rayGenRootSignature.Get());
-	}
-	
-	auto  rayGenRootAssociation = stateObjectDesc.CreateSubobject<CD3DX12_SUBOBJECT_TO_EXPORTS_ASSOCIATION_SUBOBJECT>();
-	rayGenRootAssociation->AddExport(L"rayGen");
-	rayGenRootAssociation->SetSubobjectToAssociate(*rayGenRoot);
-
-	rtlib::ComPtr <ID3D12RootSignature>    hitMissRootSignature;
-	auto hitMissRoot = stateObjectDesc.CreateSubobject< CD3DX12_LOCAL_ROOT_SIGNATURE_SUBOBJECT>();
-	{
-		auto hitMissSignatureDesc = CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC();
-		hitMissSignatureDesc.Init_1_1(0, nullptr, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_LOCAL_ROOT_SIGNATURE);
-		{
-			rtlib::ComPtr<ID3DBlob> signature;
-			rtlib::ComPtr<ID3DBlob> error;
-			rtlib::ThrowIfFailed(D3D12SerializeVersionedRootSignature(&hitMissSignatureDesc, &signature, &error));
-			rtlib::ThrowIfFailed(m_Context->GetDevice()->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&hitMissRootSignature)));
-		}
-		hitMissRoot->SetRootSignature(hitMissRootSignature.Get());
-	}
-
-	auto hitMissRootAssociation = stateObjectDesc.CreateSubobject<CD3DX12_SUBOBJECT_TO_EXPORTS_ASSOCIATION_SUBOBJECT>();
-	hitMissRootAssociation->AddExport(L"miss");
-	hitMissRootAssociation->AddExport(L"chs");
-	hitMissRootAssociation->SetSubobjectToAssociate(*hitMissRoot);
-
-	auto shaderConfig = stateObjectDesc.CreateSubobject<CD3DX12_RAYTRACING_SHADER_CONFIG_SUBOBJECT>();
-	shaderConfig->Config(sizeof(float) * 3, sizeof(float) * 2);
-
-	auto configAssociation = stateObjectDesc.CreateSubobject<CD3DX12_SUBOBJECT_TO_EXPORTS_ASSOCIATION_SUBOBJECT>();
-	configAssociation->AddExport(L"rayGen");
-	configAssociation->AddExport(L"miss");
-	configAssociation->AddExport(L"chs");
-	configAssociation->SetSubobjectToAssociate(*shaderConfig);
-
-	auto pipelineConfig = stateObjectDesc.CreateSubobject<CD3DX12_RAYTRACING_PIPELINE_CONFIG_SUBOBJECT>();
-	pipelineConfig->Config(1);
-
-	auto globalRoot = stateObjectDesc.CreateSubobject<CD3DX12_GLOBAL_ROOT_SIGNATURE_SUBOBJECT>();
-	{
-		auto globalSignatureDesc = CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC();
-		globalSignatureDesc.Init_1_1(0, nullptr, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_NONE);
-		{
-			rtlib::ComPtr<ID3DBlob> signature;
-			rtlib::ComPtr<ID3DBlob> error;
-			rtlib::ThrowIfFailed(D3D12SerializeVersionedRootSignature(&globalSignatureDesc, &signature, &error));
-			rtlib::ThrowIfFailed(m_Context->GetDevice()->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&m_GlobalRootSignature)));
-		}
-		globalRoot->SetRootSignature(m_GlobalRootSignature.Get());
-	}
-
-	 {
-
-		 const D3D12_STATE_OBJECT_DESC* pStateObjectDesc = &D3D12_STATE_OBJECT_DESC(stateObjectDesc);
-
-		 rtlib::ComPtr<ID3D12Device5> device5;
-		 m_Context->GetDevice()->QueryInterface(IID_PPV_ARGS(&device5));
-		 rtlib::ThrowIfFailed(device5->CreateStateObject(pStateObjectDesc, IID_PPV_ARGS(&m_StateObject)));
-	 }
-
 }
 
-void test::Test1AppDelegate::InitShaderTable()
+void test::Test2AppDelegate::InitShaderTable()
 {
 	m_ShaderTableEntrySize   = D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES;
 	m_ShaderTableEntrySize  += 8;
@@ -720,13 +644,13 @@ void test::Test1AppDelegate::InitShaderTable()
 	m_ShaderTable->Unmap(0, nullptr);
 }
 
-void test::Test1AppDelegate::ExecuteCommandList() {
+void test::Test2AppDelegate::ExecuteCommandList() {
 	rtlib::ThrowIfFailed(m_CommandList->Close());
 	ID3D12CommandList* commandLists[] = { m_CommandList.Get() };
 	m_Context->GetGCmdQueue()->ExecuteCommandLists(1, commandLists);
 }
 
-void test::Test1AppDelegate::WaitForGPU() {
+void test::Test2AppDelegate::WaitForGPU() {
 	
 	if (m_FenceEvent.IsValid()) {
 		const UINT curFenceValue = m_FenceValue;

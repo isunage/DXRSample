@@ -1,15 +1,15 @@
-#ifndef TEST1_APP_DELEGATE_H
-#define TEST1_APP_DELEGATE_H
+#ifndef TEST2_APP_DELEGATE_H
+#define TEST2_APP_DELEGATE_H
 #include <Win32AppDelegate.h>
 #include <RTLib/DX12Context.h>
 #include <RTLib/DX12SwapChain.h>
 #include <RTLib/DXRAccelerationStructure.h>
 namespace test {
-	class Test1AppDelegate:public Win32AppDelegate
+	class Test2AppDelegate:public Win32AppDelegate
 	{
 	public:
-        Test1AppDelegate();
-        Test1AppDelegate(int width, int height, std::string title);
+        Test2AppDelegate();
+        Test2AppDelegate(int width, int height, std::string title);
         static  auto New()->std::shared_ptr<Win32AppDelegate>;
         static  auto New(int width, int height, std::string title)->std::shared_ptr<Win32AppDelegate>;
         virtual void OnInit()   override;
@@ -24,7 +24,7 @@ namespace test {
         virtual void OnLeftButtonDown(UINT /*x*/, UINT /*y*/) override {}
         virtual void OnLeftButtonUp(UINT /*x*/, UINT /*y*/) override {}
         virtual void OnDisplayChanged() override {}
-        virtual ~Test1AppDelegate() {}
+        virtual ~Test2AppDelegate() {}
     protected:
         void InitAssets();
         void FreeAssets();

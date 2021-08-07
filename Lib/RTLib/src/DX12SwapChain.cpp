@@ -1,14 +1,14 @@
 #include "../include/RTLib/DX12SwapChain.h"
 
-void rtlib::DX12SwapChain::BeginFrame(D3D12_RESOURCE_STATES stateBefore) {
+void rtlib::DX12SwapChain::BeginFrame(D3D12_RESOURCE_STATES stateBefore, D3D12_RESOURCE_STATES stateAfter) {
     m_CommandAllocators[m_BackBufferIndex]->Reset();
     m_CommandList->Reset(m_CommandAllocators[m_BackBufferIndex].Get(), nullptr);
-    if (stateBefore != D3D12_RESOURCE_STATE_RENDER_TARGET) {
+    if (stateBefore != stateAfter) {
         m_CommandList->ResourceBarrier(
             1, &CD3DX12_RESOURCE_BARRIER::Transition(
                 m_BackBuffers[m_BackBufferIndex].Get(),
                 stateBefore,
-                D3D12_RESOURCE_STATE_RENDER_TARGET
+                stateAfter
             )
         );
     }
@@ -84,7 +84,6 @@ void rtlib::DX12SwapChain::InitSwapChain() {
     swapChainDesc.SampleDesc.Quality = 0;
     swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
     swapChainDesc.BufferCount = m_BackBufferCount;
-    swapChainDesc.Scaling = DXGI_SCALING_STRETCH;
     swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
     swapChainDesc.AlphaMode = DXGI_ALPHA_MODE_IGNORE;
     swapChainDesc.Flags = m_Flags;

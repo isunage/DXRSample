@@ -143,6 +143,19 @@ void rtlib::DX12Context::InitDevice()
 	}
 }
 
+bool rtlib::DX12Context::SupportDXR() const
+{
+	ComPtr<ID3D12Device6> device6;
+	m_Device.As(&device6);
+
+	D3D12_FEATURE_DATA_D3D12_OPTIONS5 options = {};
+	RTLIB_IF_SUCCEEDED(device6->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS5, &options, sizeof(options)))
+	{
+		return options.RaytracingTier != D3D12_RAYTRACING_TIER_NOT_SUPPORTED;
+	}
+	return false;
+}
+
 void rtlib::DX12Context::InitGCmdQueue()
 {
 	D3D12_COMMAND_QUEUE_DESC queueDesc = {};
@@ -150,6 +163,7 @@ void rtlib::DX12Context::InitGCmdQueue()
 	queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
 
 	ThrowIfFailed(m_Device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&m_GCommandQueue)));
+	RTLIB_DX12_NAME(rtlib::DX12Context::m_GCommandQueue);
 }
 
 void rtlib::DX12Context::InitCCmdQueue()
@@ -159,6 +173,7 @@ void rtlib::DX12Context::InitCCmdQueue()
 	queueDesc.Type = D3D12_COMMAND_LIST_TYPE_COMPUTE;
 
 	ThrowIfFailed(m_Device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&m_CCommandQueue)));
+	RTLIB_DX12_NAME(rtlib::DX12Context::m_CCommandQueue);
 }
 
 void rtlib::DX12Context::InitTCmdQueue()
@@ -168,5 +183,6 @@ void rtlib::DX12Context::InitTCmdQueue()
 	queueDesc.Type = D3D12_COMMAND_LIST_TYPE_COPY;
 
 	ThrowIfFailed(m_Device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&m_TCommandQueue)));
+	RTLIB_DX12_NAME(rtlib::DX12Context::m_TCommandQueue);
 }
 

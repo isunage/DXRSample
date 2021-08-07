@@ -84,6 +84,8 @@ namespace rtlib
 		auto GetGCmdQueue()const -> ID3D12CommandQueue* { return m_GCommandQueue.Get(); }
 		auto GetTCmdQueue()const -> ID3D12CommandQueue* { return m_TCommandQueue.Get(); }
 		auto GetCCmdQueue()const -> ID3D12CommandQueue* { return m_CCommandQueue.Get(); }
+
+		bool SupportDXR()const;
 	private:
 		//Init
 		void InitFactory();

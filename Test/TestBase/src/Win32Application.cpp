@@ -1,6 +1,8 @@
 #include <Win32Application.h>
 #include <Win32AppDelegate.h>
-
+#ifdef _DEBUG
+#include <iostream>
+#endif
 test::Win32Application::Win32Application() noexcept
 {
 	m_Width  = 0;
@@ -85,6 +87,9 @@ void test::Win32Application::OnRun()
 		this->OnDestroy();
 	}
 	catch (std::exception& e) {
+#ifdef _DEBUG
+		std::cout << e.what() << "\n";
+#endif
 		OnDestroy();
 	}
 }
