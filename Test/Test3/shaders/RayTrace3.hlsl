@@ -1,5 +1,12 @@
+struct Vertex{
+    float3 position;
+    float2 texCoord;
+};
+struct MissConstants{
+    float3 bgColor;
+};
 /*********************************GLOBAL RESOURCES*****************************************/
-GlobalRootSignature      globalRootSignature = {
+GlobalRootSignature globalRootSignature = {
     "DescriptorTable(UAV(u0),SRV(t0))"
 };
 RaytracingAccelerationStructure gRtScene: register(t0);
@@ -8,25 +15,50 @@ RWTexture2D<float4>             gOutput : register(u0);
 /*LocalRootSignature            rayGenRootSignature  = {};*/
 /*SubobjectToExportsAssociation rayGenAssociation    = {"rayGenRootSignature", "rayGen"};*/
 /***********************************MISS RESOURCES*****************************************/
-/*LocalRootSignature            missRootSignature    = {};*/
-/*SubobjectToExportsAssociation missAssociation      = {"missRootSignature"  ,    "miss"};*/
+LocalRootSignature              missRootSignature = {
+    "CBV(b0)"
+};
+SubobjectToExportsAssociation missAssociation = {"missRootSignature"  ,    "miss"};
+ConstantBuffer<MissConstants> missConstants  : register(b0);
 /*******************************HITGROUP RESOURCES*****************************************/
-TriangleHitGroup         hitGroup =
+TriangleHitGroup hitGroup =
 {
     "","chs"
 };
-/*LocalRootSignature            hitGroupRootSignature = {};*/
-/*SubobjectToExportsAssociation hitGroupAssociation   = {"hitGroupRootSignature", "hitGroup"};*/
+LocalRootSignature hitGroupRootSignature = {
+    "SRV(t1),SRV(t2)"
+};
+SubobjectToExportsAssociation hitGroupAssociation = {"hitGroupRootSignature", "hitGroup"};
+StructuredBuffer<Vertex>  vertices: register(t1);//register(8)
+ByteAddressBuffer         indices : register(t2);//register(8)
+uint3 GetIndices(uint triangleIndex) 
+{
+    uint address = triangleIndex * (4 * 3);
+    return indices.Load3(address);
+}
+Vertex GetVertex(uint triangleIndex, float3 barycentrices)
+{
+    uint3 indices = GetIndices(triangleIndex);
+    Vertex v = (Vertex)0;
+    [unroll]
+    for (uint i=0;i<3;++i)
+    {
+        uint index = indices[i];
+        v.position += vertices[index].position * barycentrices[i];
+        v.texCoord += vertices[index].texCoord * barycentrices[i];
+    }
+    return v;
+}
 /*********************************CONFIG RESOURCES*****************************************/
-RaytracingShaderConfig   shaderConfig      = 
+RaytracingShaderConfig          shaderConfig      = 
 {
     16, 8 
 };
-RaytracingPipelineConfig pipelineConfig    =
+RaytracingPipelineConfig        pipelineConfig    =
 {
     1
 };
-StateObjectConfig        stateObjectConfig = 
+StateObjectConfig               stateObjectConfig = 
 {
     STATE_OBJECT_FLAGS_ALLOW_LOCAL_DEPENDENCIES_ON_EXTERNAL_DEFINITONS
 };
@@ -69,17 +101,18 @@ void rayGen() {
 
 [shader("miss")]
 void miss(inout RayPayload payload) {
-    payload.color = float3(0.4, 0.6, 0.2);
+    payload.color = missConstants.bgColor;
 }
 
 
 [shader("closesthit")]
 void chs(inout RayPayload payload, in BuiltInTriangleIntersectionAttributes  attribs) {
+    
     float3 barycentrics = float3(1.0 - attribs.barycentrics.x - attribs.barycentrics.y, attribs.barycentrics.x, attribs.barycentrics.y);
+    
+    uint triangleIndex = PrimitiveIndex();
 
-    const float3 A = float3(1, 0, 0);
-    const float3 B = float3(0, 1, 0);
-    const float3 C = float3(0, 0, 1);
-
-     payload.color = A * barycentrics.x + B * barycentrics.y + C * barycentrics.z;
+    Vertex v = GetVertex(triangleIndex,barycentrics);
+    
+    payload.color = float3(v.texCoord,0.0f);
 }

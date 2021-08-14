@@ -100,6 +100,7 @@ void test::Test2AppDelegate::InitAssets()
 	InitFences();
 	InitMesh();
 	InitPipeline();
+	InitAccelerationStructures();
 	InitStateObject();
 	InitShaderTable();
 }
@@ -239,6 +240,10 @@ void test::Test2AppDelegate::InitMesh()
 		rtlib::DX12IndexBufferView::New(
 			m_IB.Get(), DXGI_FORMAT_R32_UINT, 0, 6, sizeof(indices)
 		));
+}
+
+void test::Test2AppDelegate::InitAccelerationStructures()
+{
 	//Acceleration Structure
 	if (m_Context->SupportDXR()) {
 
@@ -247,7 +252,7 @@ void test::Test2AppDelegate::InitMesh()
 
 		rtlib::ComPtr<ID3D12Device5> device5;
 		m_Context->GetDevice()->QueryInterface(IID_PPV_ARGS(&device5));
-		auto geometry  = m_Mesh->GetRayTracingGeometry();
+		auto geometry = m_Mesh->GetRayTracingGeometry();
 		geometry.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE;
 
 		rtlib::ComPtr<ID3D12Resource> blasScratchBuffer;
@@ -261,8 +266,8 @@ void test::Test2AppDelegate::InitMesh()
 
 			D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO blasInfo = {};
 			device5->GetRaytracingAccelerationStructurePrebuildInfo(&blasInputs, &blasInfo);
-			fmt::print("ResultDataMaxSizeInBytes={}\n"    , blasInfo.ResultDataMaxSizeInBytes);
-			fmt::print("ScratchDataSizeInBytes={}\n"      , blasInfo.ScratchDataSizeInBytes);
+			fmt::print("ResultDataMaxSizeInBytes={}\n", blasInfo.ResultDataMaxSizeInBytes);
+			fmt::print("ScratchDataSizeInBytes={}\n", blasInfo.ScratchDataSizeInBytes);
 			fmt::print("UpdateScratchDataSizeInBytes={}\n", blasInfo.UpdateScratchDataSizeInBytes);
 
 			rtlib::ThrowIfFailed(device5->CreateCommittedResource(
@@ -292,7 +297,7 @@ void test::Test2AppDelegate::InitMesh()
 
 			D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC blasDesc = {};
 			blasDesc.Inputs = blasInputs;
-			blasDesc.DestAccelerationStructureData    = m_Blas->GetGPUVirtualAddress();
+			blasDesc.DestAccelerationStructureData = m_Blas->GetGPUVirtualAddress();
 			blasDesc.ScratchAccelerationStructureData = blasScratchBuffer->GetGPUVirtualAddress();
 
 			m_CommandList->BuildRaytracingAccelerationStructure(&blasDesc, 0, nullptr);
@@ -303,11 +308,11 @@ void test::Test2AppDelegate::InitMesh()
 		rtlib::ComPtr<ID3D12Resource> instanceDescsBuffer;
 		rtlib::ComPtr<ID3D12Resource> tlasScratchBuffer;
 		{
-			auto tlasInputs        = D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS{};
-			tlasInputs.Type        = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL;
+			auto tlasInputs = D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS{};
+			tlasInputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL;
 			tlasInputs.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
-			tlasInputs.Flags       = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_NONE;
-			tlasInputs.NumDescs    = 1;
+			tlasInputs.Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_NONE;
+			tlasInputs.NumDescs = 1;
 
 			D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO tlasInfo = {};
 			device5->GetRaytracingAccelerationStructurePrebuildInfo(&tlasInputs, &tlasInfo);
@@ -319,9 +324,9 @@ void test::Test2AppDelegate::InitMesh()
 			instanceDesc.AccelerationStructure = m_Blas->GetGPUVirtualAddress();
 			instanceDesc.InstanceID = 0;
 			instanceDesc.InstanceContributionToHitGroupIndex = 0;
-			instanceDesc.Flags  = D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
+			instanceDesc.Flags = D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
 			DirectX::XMMATRIX m = DirectX::XMMatrixIdentity();
-			memcpy(instanceDesc.Transform, &m, sizeof(float)*3*4);
+			memcpy(instanceDesc.Transform, &m, sizeof(float) * 3 * 4);
 			instanceDesc.InstanceMask = 0xFF;
 
 			rtlib::ThrowIfFailed(device5->CreateCommittedResource(
@@ -372,7 +377,7 @@ void test::Test2AppDelegate::InitMesh()
 
 			D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC tlasDesc = {};
 			tlasDesc.Inputs = tlasInputs;
-			tlasDesc.DestAccelerationStructureData    = m_Tlas->GetGPUVirtualAddress();
+			tlasDesc.DestAccelerationStructureData = m_Tlas->GetGPUVirtualAddress();
 			tlasDesc.ScratchAccelerationStructureData = tlasScratchBuffer->GetGPUVirtualAddress();
 
 			m_CommandList->BuildRaytracingAccelerationStructure(&tlasDesc, 0, nullptr);
@@ -392,7 +397,7 @@ void test::Test2AppDelegate::InitMesh()
 					DXGI_FORMAT_R8G8B8A8_UNORM,
 					m_SwapChain->GetWidth(),
 					m_SwapChain->GetHeight(),
-					1,1,1,0,
+					1, 1, 1, 0,
 					D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS,
 					D3D12_TEXTURE_LAYOUT_UNKNOWN
 				),
@@ -404,10 +409,10 @@ void test::Test2AppDelegate::InitMesh()
 
 		D3D12_DESCRIPTOR_HEAP_DESC srvUavHeapDesc = {};
 
-		srvUavHeapDesc.Type           = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-		srvUavHeapDesc.NodeMask       = 0;
+		srvUavHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+		srvUavHeapDesc.NodeMask = 0;
 		srvUavHeapDesc.NumDescriptors = 2;
-		srvUavHeapDesc.Flags          = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+		srvUavHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 
 		rtlib::ThrowIfFailed(
 			m_Context->GetDevice()->CreateDescriptorHeap(

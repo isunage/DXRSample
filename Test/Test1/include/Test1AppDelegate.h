@@ -32,6 +32,7 @@ namespace test {
         void InitCommands();
         void InitFences();
         void InitMesh();
+        void InitAccelerationStructures();
         void InitPipeline();
         void InitStateObject();
         void InitShaderTable();

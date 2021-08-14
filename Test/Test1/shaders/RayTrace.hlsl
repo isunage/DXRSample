@@ -1,7 +1,10 @@
+/*********************************GLOBAL RESOURCES*****************************************/
+/*********************************RAYGEN RESOURCES*****************************************/
 RaytracingAccelerationStructure gRtScene: register(t0);
 RWTexture2D<float4>             gOutput : register(u0);
-
-
+/***********************************MISS RESOURCES*****************************************/
+/*******************************HITGROUP RESOURCES*****************************************/
+/*********************************CONFIG RESOURCES*****************************************/
 float3 linear2Srgb(float3 c)
 {
     float3 sq1 = sqrt(c);

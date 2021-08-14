@@ -1,0 +1,22 @@
+/*****************DescriptorHeap*******************/
+/*<-Global RootSignature-><---Hg RootSignature--->*/
+/*<---DescriptorTable----><---DescriptorTable---->*/
+/*<------実行時に指定-----><-------事前に設定------>*/
+/*<-RtOutput-><---TLAS---><---VB(1)--><---IB(1)-->*/
+/*<--Uav(1)--><--Srv(1)--><---------Srv(2)------->*/
+/*<---------------Hit Group SBT(64)------------------->*/
+/*<-ShaderIdenfier(32)-><-DescriptorTable(8)-><-align->/
+Optix
+struct HitGroupSBTRecord {
+    char          header[256];
+    float3*       vertices;
+    float3*       indices;
+    cudaTexture_t diffTex;
+};
+DXR
+LocalRootSignature HitGroupRootSignature = {
+    "DescriptorTable(SRV(t0),SRV(t1),SRV(t2))"
+};
+StructuredBuffer<Vertex> vertexBuffer:register(t0);
+ByteAddressBuffer        indexBuffer :register(t1);
+Texture2D<float4>        diffTex     :register(t2);
