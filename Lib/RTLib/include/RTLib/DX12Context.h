@@ -22,15 +22,10 @@ namespace rtlib
 
 		void OnInit() {
 			InitFactory();
-
 			InitAdapter();
-
 			InitDevice();
-
 			InitGCmdQueue();
-
 			InitCCmdQueue();
-
 			InitTCmdQueue();
 		}
 		void OnDeviceLost() {
