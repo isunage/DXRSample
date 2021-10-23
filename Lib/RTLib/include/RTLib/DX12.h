@@ -200,7 +200,7 @@ namespace rtlib{
     class DX12Mesh {
     private:
         using VertexBufferViewPtr = std::shared_ptr<DX12VertexBufferView>;
-        using  IndexBufferViewPtr = std::shared_ptr<DX12IndexBufferView>;
+        using  IndexBufferViewPtr = std::shared_ptr< DX12IndexBufferView>;
     public:
         DX12Mesh(const std::string& name="") :m_Name{name} {}
         static auto New(const std::string& name = "")->std::shared_ptr<DX12Mesh> {
@@ -242,29 +242,29 @@ namespace rtlib{
             else {
                 commandList->DrawInstanced(m_IbView->GetNumElements(), 1, 0, 0);
             }
-
         }
         auto GetRayTracingGeometry()const -> D3D12_RAYTRACING_GEOMETRY_DESC {
             D3D12_RAYTRACING_GEOMETRY_DESC geometry = {};
-            geometry.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;
-            geometry.Triangles.VertexFormat = m_VbView->GetFormat();
-            geometry.Triangles.VertexBuffer.StartAddress = m_VbView->GetVirtualAddreess();
+            geometry.Type                      = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;
+            geometry.Triangles.VertexFormat    = m_VbView->GetFormat();
+            geometry.Triangles.VertexBuffer.StartAddress  = m_VbView->GetVirtualAddreess();
             geometry.Triangles.VertexBuffer.StrideInBytes = m_VbView->GetStrideInBytes();
-            geometry.Triangles.VertexCount = m_VbView->GetNumElements();
+            geometry.Triangles.VertexCount     = m_VbView->GetNumElements();
             if (m_IbView) {
                 geometry.Triangles.IndexBuffer = m_IbView->GetVirtualAddreess();
-                geometry.Triangles.IndexCount = m_IbView->GetNumElements();
+                geometry.Triangles.IndexCount  = m_IbView->GetNumElements();
                 geometry.Triangles.IndexFormat = m_IbView->GetFormat();
             }
             geometry.Triangles.Transform3x4 = 0;
             return geometry;
         }
+        virtual ~DX12Mesh(){}
     private:
         std::string         m_Name   = {};
         VertexBufferViewPtr m_VbView = {};
         IndexBufferViewPtr  m_IbView = {};
         XMFLOAT3X4          m_Models = {};
     };
-
+    using DX12MeshPtr = std::shared_ptr<DX12Mesh>;
 }
 #endif

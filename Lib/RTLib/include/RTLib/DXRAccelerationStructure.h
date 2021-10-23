@@ -3,7 +3,4 @@
 #include "DXR.h"
 #include "DX12Context.h"
 #include <string>
-namespace rtlib{
-
-}
 #endif

@@ -12,8 +12,8 @@ GlobalRootSignature globalRootSignature = {
 RaytracingAccelerationStructure gRtScene: register(t0);
 RWTexture2D<float4>             gOutput : register(u0);
 /*********************************RAYGEN RESOURCES*****************************************/
-/*LocalRootSignature            rayGenRootSignature  = {};*/
-/*SubobjectToExportsAssociation rayGenAssociation    = {"rayGenRootSignature", "rayGen"};*/
+/*LocalRootSignature            rayGenRootSignature  = {};                                */
+/*SubobjectToExportsAssociation rayGenAssociation    = {"rayGenRootSignature", "rayGen"}; */
 /***********************************MISS RESOURCES*****************************************/
 LocalRootSignature              missRootSignature = {
     "CBV(b0)"

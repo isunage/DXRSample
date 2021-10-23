@@ -43,7 +43,6 @@ namespace test {
         void ExecuteCommandList();
         void WaitForGPU();
     private:
-        
         std::shared_ptr<rtlib::DX12Context>       m_Context       = nullptr;
         std::shared_ptr<rtlib::DX12SwapChain>     m_SwapChain     = nullptr;
         rtlib::ComPtr<ID3D12Resource>             m_VB;

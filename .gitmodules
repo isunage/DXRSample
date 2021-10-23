@@ -1,3 +1,9 @@
 [submodule "Lib/ThirdParty/fmt"]
 	path = Lib/ThirdParty/fmt
 	url = https://github.com/fmtlib/fmt
+[submodule "Lib/ThirdParty/tinyobjloader"]
+	path = Lib/ThirdParty/tinyobjloader
+	url = https://github.com/syoyo/tinyobjloader
+[submodule "Lib/ThirdParty/stb"]
+	path = Lib/ThirdParty/stb
+	url = https://github.com/nothings/stb

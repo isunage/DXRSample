@@ -1,5 +1,6 @@
 #include "../include/Test3AppDelegate.h"
 #include <RTLib/DX12.h>
+#include <d3d12shader.h>
 #include <dxcapi.h>
 #include <Test3Config.h>
 #include <filesystem>
@@ -58,17 +59,17 @@ void test::Test3AppDelegate::OnRender()
 	commandList5->SetComputeRootDescriptorTable(0, m_GlobalRootGpuHandle);
 
 	D3D12_DISPATCH_RAYS_DESC rayTraceDesc = {};
-	rayTraceDesc.Width = m_SwapChain->GetWidth();
-	rayTraceDesc.Height = m_SwapChain->GetHeight();
-	rayTraceDesc.Depth = 1;
+	rayTraceDesc.Width                                  = m_SwapChain->GetWidth();
+	rayTraceDesc.Height                                 = m_SwapChain->GetHeight();
+	rayTraceDesc.Depth                                  = 1;
 	rayTraceDesc.RayGenerationShaderRecord.StartAddress = m_RgSbtAddress;
-	rayTraceDesc.RayGenerationShaderRecord.SizeInBytes = m_RgSbtSizeInBytes;
-	rayTraceDesc.MissShaderTable.StartAddress = m_MsSbtAddress;
-	rayTraceDesc.MissShaderTable.SizeInBytes = m_MsSbtSizeInBytes;
-	rayTraceDesc.MissShaderTable.StrideInBytes = m_MsSbtStrideInBytes;
-	rayTraceDesc.HitGroupTable.StartAddress = m_HgSbtAddress;
-	rayTraceDesc.HitGroupTable.SizeInBytes = m_HgSbtSizeInBytes;
-	rayTraceDesc.HitGroupTable.StrideInBytes = m_HgSbtStrideInBytes;
+	rayTraceDesc.RayGenerationShaderRecord.SizeInBytes  = m_RgSbtSizeInBytes;
+	rayTraceDesc.MissShaderTable.StartAddress           = m_MsSbtAddress;
+	rayTraceDesc.MissShaderTable.SizeInBytes            = m_MsSbtSizeInBytes;
+	rayTraceDesc.MissShaderTable.StrideInBytes          = m_MsSbtStrideInBytes;
+	rayTraceDesc.HitGroupTable.StartAddress             = m_HgSbtAddress;
+	rayTraceDesc.HitGroupTable.SizeInBytes              = m_HgSbtSizeInBytes;
+	rayTraceDesc.HitGroupTable.StrideInBytes            = m_HgSbtStrideInBytes;
 	commandList5->SetPipelineState1(m_StateObject.Get());
 	commandList5->DispatchRays(&rayTraceDesc);
 	
@@ -258,7 +259,7 @@ void test::Test3AppDelegate::InitAccelerationStructures()
 
 	rtlib::ComPtr<ID3D12Device5> device5;
 	m_Context->GetDevice()->QueryInterface(IID_PPV_ARGS(&device5));
-	auto geometry = m_Mesh->GetRayTracingGeometry();
+	auto geometry  = m_Mesh->GetRayTracingGeometry();
 	geometry.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE;
 
 	rtlib::ComPtr<ID3D12Resource> blasScratchBuffer;
@@ -272,8 +273,8 @@ void test::Test3AppDelegate::InitAccelerationStructures()
 
 		D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO blasInfo = {};
 		device5->GetRaytracingAccelerationStructurePrebuildInfo(&blasInputs, &blasInfo);
-		fmt::print("ResultDataMaxSizeInBytes={}\n", blasInfo.ResultDataMaxSizeInBytes);
-		fmt::print("ScratchDataSizeInBytes={}\n", blasInfo.ScratchDataSizeInBytes);
+		fmt::print("    ResultDataMaxSizeInBytes={}\n",     blasInfo.ResultDataMaxSizeInBytes);
+		fmt::print("      ScratchDataSizeInBytes={}\n",       blasInfo.ScratchDataSizeInBytes);
 		fmt::print("UpdateScratchDataSizeInBytes={}\n", blasInfo.UpdateScratchDataSizeInBytes);
 
 		rtlib::ThrowIfFailed(device5->CreateCommittedResource(
@@ -527,7 +528,7 @@ void test::Test3AppDelegate::InitStateObject()
 		rtlib::ThrowIfFailed(DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&compiler)));
 
 		UINT32 codePage = 0;
-		auto rayTraceShaderPath = std::filesystem::path(TEST3_SHADER_PATH) / "RayTrace3.hlsl";
+		auto rayTraceShaderPath = std::filesystem::path(TEST3_SHADER_PATH)/"RayTrace3.hlsl";
 		rtlib::ThrowIfFailed(
 			library->CreateBlobFromFile(rayTraceShaderPath.wstring().c_str(), &codePage, &shaderBlob)
 		);

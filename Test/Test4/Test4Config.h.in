@@ -1,0 +1,4 @@
+#ifndef TEST_TEST4_CONFIG_H
+#define TEST_TEST4_CONFIG_H
+#cmakedefine TEST4_SHADER_PATH "@TEST4_SHADER_PATH@"
+#endif

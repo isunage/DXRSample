@@ -2,5 +2,6 @@ set(RTLIB_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/DX12Context.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/DX12SwapChain.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/DXRAccelerationStructure.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ObjModelLoader.cpp
     PARENT_SCOPE
 )

@@ -5,7 +5,10 @@ set(RTLIB_HEADERS
 
     ${CMAKE_CURRENT_SOURCE_DIR}/RTLib/DXR.h
     ${CMAKE_CURRENT_SOURCE_DIR}/RTLib/DXRAccelerationStructure.h  
-    ${CMAKE_CURRENT_SOURCE_DIR}/RTLib/DXRShaderBindingTable.h  
+    ${CMAKE_CURRENT_SOURCE_DIR}/RTLib/DXRShaderBindingTable.h 
+    
+    ${CMAKE_CURRENT_SOURCE_DIR}/RTLib/Utils/Material.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/RTLib/Utils/ObjModelLoader.h
     PARENT_SCOPE
 )
 set(RTLIB_INCLUDE_DIRS 

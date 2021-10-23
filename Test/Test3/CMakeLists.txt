@@ -10,6 +10,6 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Test3Config.h.in ${CMAKE_CURRENT_BINA
 
 target_include_directories(Test3 PUBLIC ${TEST3_INCLUDE_DIRS} ${CMAKE_CURRENT_BINARY_DIR})
 
-target_link_libraries(Test3 PUBLIC TestBase RTLib dxcompiler.lib)
+target_link_libraries(Test3 PUBLIC TestBase RTLib)
 
 CopyDXC_DLL(Test3)
